@@ -1,0 +1,3 @@
+include ':android-common'
+include ':app'
+rootProject.name = "LazyLibraryExample"
