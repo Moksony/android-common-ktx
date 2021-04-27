@@ -6,7 +6,6 @@ import kotlinx.coroutines.*
 class LazyData<T>(private val dataSource: DataSource<T>) {
     private var data: T? = null
     private var loadingJob: Job? = null
-    private val scope = CoroutineScope(Dispatchers.IO)
 
     suspend fun obtain(): T {
         if (data != null) {
@@ -18,10 +17,12 @@ class LazyData<T>(private val dataSource: DataSource<T>) {
         if (job != null && (job.isActive || !job.isCompleted)) {
             job.join()
         } else {
-            this.loadingJob = scope.launch {
-                val data = dataSource.load()
-                if (isActive) {
-                    this@LazyData.data = data
+            withContext(currentCoroutineContext()) {
+                loadingJob = launch {
+                    val data = dataSource.load()
+                    if (isActive) {
+                        this@LazyData.data = data
+                    }
                 }
             }
             job = this.loadingJob
